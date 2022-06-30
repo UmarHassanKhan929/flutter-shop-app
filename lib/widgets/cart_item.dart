@@ -34,6 +34,33 @@ class checkoutCartItem extends StatelessWidget {
         ),
       ),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) {
+        return showDialog(
+          context: context,
+          builder: (ctx) {
+            return AlertDialog(
+              title: Text('YEETING...'),
+              content: Text(
+                'Want to remove ${title} from cart ?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text('Yes'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: Text('No'),
+                ),
+              ],
+            );
+          },
+        );
+      },
       onDismissed: (direction) {
         Provider.of<Cart>(context, listen: false).removeItem(productId);
       },
@@ -54,7 +81,35 @@ class checkoutCartItem extends StatelessWidget {
           ),
           title: Text(title),
           subtitle: Text('Price: \$ ${(price * quantity).round()}'),
-          trailing: Text('x${quantity.toString()}'),
+          trailing: Container(
+            child: FittedBox(
+              child: Column(
+                children: [
+                  Text(
+                    '$quantity x',
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.remove),
+                        onPressed: () {
+                          Provider.of<Cart>(context, listen: false)
+                              .removeSingleItem(productId);
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.add),
+                        onPressed: () {
+                          Provider.of<Cart>(context, listen: false)
+                              .addSingleItem(productId);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
