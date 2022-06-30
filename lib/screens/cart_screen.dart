@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/models/http_exception.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart.dart';
 import '../widgets/cart_item.dart';
@@ -40,14 +41,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                          cart.items.values.toList(), cart.totalAmount);
-                      cart.clearCart();
-                    },
-                    child: Text('Checkout'),
-                  ),
+                  CheckoutOption(cart: cart),
                 ],
               ),
             ),
@@ -71,6 +65,66 @@ class CartScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class CheckoutOption extends StatefulWidget {
+  const CheckoutOption({
+    Key key,
+    @required this.cart,
+  }) : super(key: key);
+
+  final Cart cart;
+
+  @override
+  State<CheckoutOption> createState() => _CheckoutOptionState();
+}
+
+class _CheckoutOptionState extends State<CheckoutOption> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: (widget.cart.totalAmount <= 0 || _isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+
+              await Provider.of<Orders>(context, listen: false)
+                  .addOrder(
+                widget.cart.items.values.toList(),
+                widget.cart.totalAmount,
+              )
+                  .then((value) {
+                setState(() {
+                  _isLoading = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Order Placed'),
+                    duration: Duration(seconds: 2),
+                    backgroundColor: Theme.of(context).primaryColor,
+                  ),
+                );
+                widget.cart.clearCart();
+              }).catchError((value) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Connection Failed'),
+                    duration: Duration(seconds: 2),
+                    backgroundColor: Theme.of(context).errorColor,
+                  ),
+                );
+                setState(() {
+                  _isLoading = false;
+                });
+              });
+            },
+      child: _isLoading ? CircularProgressIndicator() : Text('Checkout'),
     );
   }
 }
