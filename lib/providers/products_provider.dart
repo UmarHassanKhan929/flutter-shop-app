@@ -43,6 +43,11 @@ class Products with ChangeNotifier {
 
   // var _showFavouritesOnly = false;
 
+  final String authToken;
+  final String userId;
+
+  Products(this.authToken, this._items, this.userId);
+
   List<Product> get items {
     // if (_showFavouritesOnly) {
     //   return _items.where((element) => element.isFavorite).toList();
@@ -74,8 +79,8 @@ class Products with ChangeNotifier {
   // }
 
   Future<void> addProduct(Product product) async {
-    const url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/products.json';
+    final url =
+        'https://flutter-zashop-default-rtdb.firebaseio.com/products.json?auth=$authToken';
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -86,6 +91,7 @@ class Products with ChangeNotifier {
             'imageUrl': product.imageUrl,
             'price': product.price,
             'isFavorite': product.isFavorite,
+            'creatorId': userId
           },
         ),
       );
@@ -108,7 +114,7 @@ class Products with ChangeNotifier {
 
   Future<void> updateProduct(String id, Product newproduct) async {
     final url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/products/$id.json';
+        'https://flutter-zashop-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken';
 
     await http.patch(Uri.parse(url),
         body: json.encode({
@@ -128,7 +134,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/products/$id.json';
+        'https://flutter-zashop-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken';
 
     final existingProductIndex =
         _items.indexWhere((element) => element.id == id);
@@ -146,18 +152,26 @@ class Products with ChangeNotifier {
     existingProduct = null;
   }
 
-  Future<void> fetchAndSetProducts() async {
-    const url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/products.json';
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+    final url =
+        'https://flutter-zashop-default-rtdb.firebaseio.com/products.json?auth=$authToken&$filterString';
 
     try {
       final response = await http.get(Uri.parse(url));
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      final List<Product> loadedProducts = [];
 
       if (extractedData == null) {
         return;
       }
+
+      final favUrl =
+          'https://flutter-zashop-default-rtdb.firebaseio.com/userFavourites/$userId.json?auth=$authToken';
+      final favouriteResponse = await http.get(Uri.parse(favUrl));
+      final favouriteData = await json.decode(favouriteResponse.body);
+
+      final List<Product> loadedProducts = [];
 
       extractedData.forEach((key, value) {
         loadedProducts.add(Product(
@@ -166,7 +180,8 @@ class Products with ChangeNotifier {
           description: value['description'],
           price: value['price'],
           imageUrl: value['imageUrl'],
-          isFavorite: value['isFavorite'],
+          isFavorite:
+              favouriteData == null ? false : favouriteData[key] ?? false,
         ));
       });
 

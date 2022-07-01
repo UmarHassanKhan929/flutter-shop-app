@@ -11,7 +11,7 @@ class UserProductsScreen extends StatelessWidget {
   static const routeName = '/user-products';
   @override
   Widget build(BuildContext context) {
-    final productsData = Provider.of<Products>(context);
+    // final productsData = Provider.of<Products>(context);
 
     return Scaffold(
       drawer: AppDrawer(),
@@ -26,26 +26,47 @@ class UserProductsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () {
-          return Provider.of<Products>(context, listen: false)
-              .fetchAndSetProducts();
-        },
-        child: Padding(
-          padding: EdgeInsets.all(8),
-          child: ListView.builder(
-            itemCount: productsData.items.length,
-            itemBuilder: (_, i) => Column(
-              children: [
-                UserProductItem(
-                    productsData.items[i].id,
-                    productsData.items[i].title,
-                    productsData.items[i].imageUrl),
-                Divider(),
-              ],
-            ),
-          ),
-        ),
+      body: FutureBuilder(
+        future: Provider.of<Products>(context, listen: false)
+            .fetchAndSetProducts(true),
+        builder: (context, snapshot) =>
+            snapshot.connectionState == ConnectionState.waiting
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () {
+                      return Provider.of<Products>(context, listen: false)
+                          .fetchAndSetProducts(true);
+                    },
+                    child: Consumer<Products>(
+                      builder: (context, productsData, _) => Padding(
+                        padding: EdgeInsets.all(8),
+                        child: productsData.items.length == 0
+                            ? Center(
+                                child: Text(
+                                    "You currently dont have any of your own products, start by adding new by clicking + icon above",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    )),
+                              )
+                            : ListView.builder(
+                                itemCount: productsData.items.length,
+                                itemBuilder: (context, i) => Column(
+                                  children: [
+                                    UserProductItem(
+                                      productsData.items[i].id,
+                                      productsData.items[i].title,
+                                      productsData.items[i].imageUrl,
+                                    ),
+                                    Divider(),
+                                  ],
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
       ),
     );
   }

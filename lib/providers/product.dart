@@ -8,6 +8,7 @@ class Product with ChangeNotifier {
   final String description;
   final double price;
   final String imageUrl;
+  final String userId;
   bool isFavorite;
 
   Product({
@@ -16,12 +17,13 @@ class Product with ChangeNotifier {
     @required this.description,
     @required this.price,
     @required this.imageUrl,
+    @required this.userId,
     this.isFavorite = false,
   });
 
-  Future<void> toggleFavoriteStatus() async {
+  Future<void> toggleFavoriteStatus(String authToken, String userId) async {
     final url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/products/$id.json';
+        'https://flutter-zashop-default-rtdb.firebaseio.com/userFavourites/$userId/$id.json?auth=$authToken';
 
     final oldStatus = isFavorite;
 
@@ -29,14 +31,10 @@ class Product with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await http.patch(Uri.parse(url),
-          body: json.encode({
-            'title': title,
-            'description': description,
-            'imageUrl': imageUrl,
-            'price': price,
-            'isFavorite': isFavorite,
-          }));
+      final response = await http.put(Uri.parse(url),
+          body: json.encode(
+            isFavorite,
+          ));
       if (response.statusCode >= 400) {
         isFavorite = oldStatus;
         notifyListeners();
