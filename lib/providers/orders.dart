@@ -30,7 +30,7 @@ class Orders with ChangeNotifier {
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     final url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken';
+        'https://.firebaseio.com/orders/$userId.json?auth=$authToken';
     final timestamp = DateTime.now();
     try {
       final response = await http.post(
@@ -72,7 +72,7 @@ class Orders with ChangeNotifier {
 
   Future<void> fetchAndSetOrders() async {
     final url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken';
+        'https://.firebaseio.com/orders/$userId.json?auth=$authToken';
     final timestamp = DateTime.now();
 
     final response = await http.get(Uri.parse(url));
