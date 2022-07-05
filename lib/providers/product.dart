@@ -23,7 +23,7 @@ class Product with ChangeNotifier {
 
   Future<void> toggleFavoriteStatus(String authToken, String userId) async {
     final url =
-        'https://flutter-zashop-default-rtdb.firebaseio.com/userFavourites/$userId/$id.json?auth=$authToken';
+        'https://.firebaseio.com/userFavourites/$userId/$id.json?auth=$authToken';
 
     final oldStatus = isFavorite;
 
